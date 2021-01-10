@@ -59,11 +59,7 @@ object Chat {
 		if (debugMode) {
 			for (message in messages) {
 				val text = String.format("[DEBUG] [%s] %s", if (parsed.isEmpty()) "|" else parsed, message)
-				if (PluginBase.log != null) {
-					PluginBase.log.info(text)
-				} else {
-					println(StringBuilder(text).insert(7, ":"))
-				}
+				PluginBase.log.info(text)
 			}
 		}
 	}
@@ -85,68 +81,18 @@ object Chat {
 					listOf(*objects)
 										  ) { o: Any? -> if (o != null && o.javaClass.isArray) Arrays.toString(o as Array<Any?>?) else o.toString() }) {
 				val text = String.format("[DEBUG] [%s] %s", if (prefix.isEmpty()) "|" else prefix, String.format(format, *objects))
-				if (PluginBase.log != null) {
-					PluginBase.log.info(text)
-				} else {
-					println(StringBuilder(text).insert(7, ":"))
-				}
+				PluginBase.log.info(text)
 			}
 		}
 	}
 
-	fun info(vararg messages: String) {
-		for (message in messages) {
-			if (PluginBase.log != null) {
-				PluginBase.log.info(message)
-			} else {
-				println("[INFO]: $message")
-			}
-		}
-	}
+	fun info(vararg messages: String) = messages.forEach { PluginBase.log.info(it) }
+	fun infof(format: String, vararg objects: Any?) = PluginBase.log.info(String.format(format, *objects))
+	fun warning(vararg messages: String) = messages.forEach { PluginBase.log.warning(it) }
+	fun warningf(format: String, vararg objects: Any?) = PluginBase.log.warning(String.format(format, *objects))
+	fun severe(vararg messages: String) = messages.forEach { PluginBase.log.severe(it) }
+	fun severef(format: String, vararg objects: Any?) = PluginBase.log.severe(String.format(format, *objects))
 
-	fun infof(format: String, vararg objects: Any?) {
-		if (PluginBase.log != null) {
-			PluginBase.log.info(String.format(format, *objects))
-		} else {
-			System.err.println("[INFO]: " + String.format(format, *objects))
-		}
-	}
-
-	fun warning(vararg messages: String) {
-		for (message in messages) {
-			if (PluginBase.log != null) {
-				PluginBase.log.warning(message)
-			} else {
-				println("[WARN]: $message")
-			}
-		}
-	}
-
-	fun warningf(format: String, vararg objects: Any?) {
-		if (PluginBase.log != null) {
-			PluginBase.log.warning(String.format(format, *objects))
-		} else {
-			System.err.println("[WARN]: " + String.format(format, *objects))
-		}
-	}
-
-	fun severe(vararg messages: String) {
-		for (message in messages) {
-			if (PluginBase.log != null) {
-				PluginBase.log.severe(message)
-			} else {
-				System.err.println("[ERROR]: $message")
-			}
-		}
-	}
-
-	fun severef(format: String, vararg objects: Any?) {
-		if (PluginBase.log != null) {
-			PluginBase.log.severe(String.format(format, *objects))
-		} else {
-			System.err.println("[ERROR]: " + String.format(format, *objects))
-		}
-	}
 
 	/*private static String consoleColorize(final String string) {
 		return ConsoleColor.translateAlternateColorCodes('&', getString(string));

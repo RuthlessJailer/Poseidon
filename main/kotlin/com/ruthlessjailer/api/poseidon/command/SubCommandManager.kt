@@ -105,10 +105,25 @@ object SubCommandManager {
 				SubCommandException::class.java)
 
 		//initialize variables
+		var v = 0
 		val arguments = Array<Argument<*>>(counter) { i -> if (EnumParser.GENERIC.isFormatValid(format[i])) Argument.GENERIC else Argument.EMPTY }
 		val variables = Array<Class<*>>(variableCounter) { i ->
-			if (EnumParser.GENERIC.isFormatValid(format[i])) {
+
+			format@ for (arg in format) {
+				for (entry in parsers.entries) {
+					if (!entry.value.isFormatValid(format[v])) {
+						v++
+						break@format
+					}
+				}
+			}
+
+			println(format[v])
+
+			if (EnumParser.GENERIC.isFormatValid(format[v])) {
 				val enumType = method.parameterTypes[i + 2]//+2 for sender and args
+
+				println(enumType)
 
 				Checks.verify(
 						enumType.isEnum,
@@ -135,17 +150,13 @@ object SubCommandManager {
 				if (!parser.isFormatValid(arg)) continue
 				if (ClassUtils.primitiveToWrapper(parser.type) != ClassUtils.primitiveToWrapper(method.parameterTypes[variableCounter + 2])) continue
 
-				arguments[counter] = Argument(parser, true)
-				variables[variableCounter] = parser.type
+				arguments[counter++] = Argument(parser, true)
+				variables[variableCounter++] = parser.type
 
-				variableCounter++
-				counter++
 				continue@format
 			}
 
-			arguments[counter] = Argument(parsers[String::class.java] ?: StringParser().register(), false, arg.split("|"))
-
-			counter++
+			arguments[counter++] = Argument(parsers[String::class.java] ?: StringParser().register(), false, arg.split("|"))
 		}
 
 		//verify that the method's parameters actually match

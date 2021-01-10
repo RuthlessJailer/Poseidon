@@ -15,7 +15,7 @@ import java.util.logging.Logger
 
 abstract class PluginBase : JavaPlugin(), Listener {
 
-	companion object Info {
+	companion object {
 		@Volatile
 		@JvmStatic
 		lateinit var instance: PluginBase
@@ -192,7 +192,6 @@ abstract class PluginBase : JavaPlugin(), Listener {
 	 * Called in [onDisable].
 	 */
 	open fun onStop() {}
-
 
 	private fun debug(vararg string: String) {
 		Chat.debug("Plugin", string)

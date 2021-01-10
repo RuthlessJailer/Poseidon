@@ -16,9 +16,14 @@ public class TestCommand extends CommandBase implements SuperiorCommand {
 		super("test2");
 	}
 
-	@SubCommand(format = "%enum %enum %enum")
+	@SubCommand(format = "yeet %enum %enum %enum")
 	private void yeet(final CommandSender sender, final String[] args, final Material material, final ChatColor chatColor, final GameMode gameMode) {
 		sendf(sender, "%s, %s, %s", material, chatColor, gameMode);
+	}
+
+	@SubCommand(format = "notyeet %str %int")
+	private void yeet(final CommandSender sender, final String[] args, final String string, final int x) {
+		sendf(sender, "%s, %s", string, x);
 	}
 
 }

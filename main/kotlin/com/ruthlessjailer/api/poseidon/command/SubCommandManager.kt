@@ -4,6 +4,7 @@ import com.ruthlessjailer.api.poseidon.Chat
 import com.ruthlessjailer.api.poseidon.PluginBase
 import com.ruthlessjailer.api.poseidon.command.parser.ArgumentParser
 import com.ruthlessjailer.api.poseidon.command.parser.EnumParser
+import com.ruthlessjailer.api.poseidon.command.parser.StringParser
 import com.ruthlessjailer.api.theseus.Checks
 import com.ruthlessjailer.api.theseus.Common
 import com.ruthlessjailer.api.theseus.ReflectUtil
@@ -23,7 +24,7 @@ object SubCommandManager {
 
 	private val subCommands = HashMap<CommandBase, List<SubCommandWrapper>>()
 
-	private val parsers = HashMap<Class<*>, ArgumentParser<*>>()
+	val parsers = HashMap<Class<*>, ArgumentParser<*>>()
 
 	//TODO help menus
 
@@ -50,7 +51,17 @@ object SubCommandManager {
 
 		for (method in command.javaClass.declaredMethods) {
 			if (method.isAnnotationPresent(SubCommand::class.java)) {
-				wrappers.add(parseMethod(command, method, method.getAnnotation(SubCommand::class.java) as SubCommand))
+				try {
+					wrappers.add(parseMethod(command, method, method.getAnnotation(SubCommand::class.java) as SubCommand))
+				} catch (e: SubCommandException) {//add empty one so that this doesn't run every time the command is executed
+					wrappers.add(SubCommandWrapper.EMPTY)
+
+					synchronized(subCommands) {
+						subCommands.put(command, wrappers)
+					}
+
+					throw e
+				}
 			}
 		}
 
@@ -73,43 +84,20 @@ object SubCommandManager {
 			parent.autoGenerateHelpMenu = false
 		}
 
-//		val enumTypes = annotation.enumTypes
-//		val arguments = arrayOfNulls<Argument<*>>(format.size)
-
 		var counter = 0
 		var variableCounter = 0//all variables that must be parsed and included as parameters on method
-/*		var enumTypeCounter = 0//all classes that are required to be provided inside the annotation, ie enums
-
-		for (enumType in enumTypes) {//make sure the enumTypes are enums and make parsers for them if not exist already
-			Checks.verify(
-					enumType.java.isEnum,
-					"$INVALID_USAGE Provided class ${enumType.simpleName} is not an enum.",
-					SubCommandException::class.java)
-
-			if (parsers[enumType.java] == null) {
-				parsers[enumType.java] = EnumParser(enumType.java)
-			}
-		}*/
 
 		for (arg in format) {
 			for (entry in parsers.entries) {
 				if (entry.value.isFormatValid(arg)) {
-//					if (entry.value.requiresClass) {
-//						enumTypeCounter++
-//					}
-
 					variableCounter++
+					break
 				}
 			}
 			counter++
 		}
 
 		//check that the method meets the basic requirements before continuing
-
-		/*Checks.verify(
-				enumTypeCounter == enumTypes.size,
-				"$INVALID_USAGE Provided classes do not match required classes in format '${annotation.format}' on method ${getMethodPath(method)}.",
-				SubCommandException::class.java)*/
 
 		Checks.verify(
 				variableCounter == method.parameterCount - 2,
@@ -131,35 +119,31 @@ object SubCommandManager {
 					parsers[enumType] = EnumParser(enumType as Class<out Enum<*>>)
 				}
 
-				EnumParser.ENUM_TYPE
+				enumType as Class<out Enum<*>>
 			} else Void.TYPE
 		}
 
 		counter = 0
 		variableCounter = 0
-//		enumTypeCounter = 0
 
 		//parse the format
 
-		for (arg in format) {
+		format@ for (arg in format) {
 			for (entry in parsers) {
 				val parser = entry.value
 
 				if (!parser.isFormatValid(arg)) continue
-				println(variableCounter)
-				println(method.parameterTypes)
-				println(method.parameterTypes[variableCounter + 2])
-				//TODO fixme
-				if (parser.type != method.parameterTypes[variableCounter + 2]) continue
+				if (ClassUtils.primitiveToWrapper(parser.type) != ClassUtils.primitiveToWrapper(method.parameterTypes[variableCounter + 2])) continue
 
 				arguments[counter] = Argument(parser, true)
 				variables[variableCounter] = parser.type
 
 				variableCounter++
-				continue
+				counter++
+				continue@format
 			}
 
-			arguments[counter] = Argument(parsers[String::class.java]!!, false, arg.split("|"))
+			arguments[counter] = Argument(parsers[String::class.java] ?: StringParser().register(), false, arg.split("|"))
 
 			counter++
 		}
@@ -179,9 +163,11 @@ object SubCommandManager {
 		for ((i, type) in method.parameterTypes.withIndex()) {
 			if (i < 2) continue//start at 2 since first two parameters are reserved
 
+			if (variables[i - 2] == Void.TYPE) continue//void ones are unparsed (non-variables just static args)
+
 			Checks.verify(
 					ClassUtils.primitiveToWrapper(type) == ClassUtils.primitiveToWrapper(variables[i - 2]),//-2 since first two params are sender and args
-					"$INVALID_USAGE Method parameter ${type.simpleName} at index $i does not match expected type ${variables[i - 2]} from format.",
+					"$INVALID_USAGE Method parameter ${ReflectUtil.getPath(type)} at index $i does not match expected type ${variables[i - 2]} from format ${format[i - 2]}.",
 					SubCommandException::class.java)
 		}
 
@@ -200,13 +186,15 @@ object SubCommandManager {
 		if (subCommands[command] == null) {
 			register(command)
 
-			Checks.verify(
-					subCommands[command] != null,
-					"Internal error: unable to register command /${command.label}.",
-					SubCommandException::class.java)
+			Checks.nullCheck(
+					subCommands[command],
+					"Internal error: unable to register command /${command.label}.")
 		}
 
 		wrappers@ for (wrapper in subCommands[command]!!) {
+			if (args.size < wrapper.arguments.size) {
+				continue
+			}
 
 			val variableTypes = wrapper.variableTypes
 
@@ -215,13 +203,13 @@ object SubCommandManager {
 			parameters[0] = sender
 			parameters[1] = args
 
-			if (args.size < wrapper.arguments.size) {
-				continue
-			}
-
+			var v = 2
 			for ((a, argument) in wrapper.arguments.withIndex()) {
 				if (!argument.isValidIgnoreCase(args[a])) continue@wrappers
-				if (argument.isVariable) parameters[a + 2] = argument.parser.parse(args[a])//+2: sender args
+				if (argument.isVariable) {
+					parameters[v] = argument.parser.parse(args[a])
+					v++
+				} //+2: sender args
 			}
 
 			Chat.debug("SubCommands", "Invoking method ${getMethodPath(wrapper.method)} for args '${args.joinToString(" ")}'.")

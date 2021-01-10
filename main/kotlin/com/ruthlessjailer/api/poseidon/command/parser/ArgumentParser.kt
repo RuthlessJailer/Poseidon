@@ -33,8 +33,9 @@ abstract class ArgumentParser<T>(val requiresClass: Boolean = false, format: Str
 	abstract fun parse(argument: String): T?
 	abstract fun possibilities(): List<String>
 
-	fun register() {
+	fun register(): ArgumentParser<T> {
 		SubCommandManager.registerArgumentParser(type, this)
+		return this
 	}
 
 }

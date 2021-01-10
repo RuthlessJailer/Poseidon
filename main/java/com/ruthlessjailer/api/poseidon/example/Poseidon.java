@@ -1,5 +1,6 @@
 package com.ruthlessjailer.api.poseidon.example;
 
+import com.ruthlessjailer.api.poseidon.Chat;
 import com.ruthlessjailer.api.poseidon.PluginBase;
 
 /**
@@ -9,6 +10,8 @@ public class Poseidon extends PluginBase {
 
 	@Override
 	public void onStart() {
+		Chat.INSTANCE.setDebugMode(true);
 		registerCommands(new TestCommand());
 	}
+
 }

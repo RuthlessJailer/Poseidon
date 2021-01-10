@@ -5,6 +5,8 @@ import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.command.CommandSender
 import java.util.*
+import java.util.stream.Collectors
+import java.util.stream.Stream
 
 /**
  * @author RuthlessJailer
@@ -13,51 +15,14 @@ object Chat {
 
 	var debugMode = false
 
-	fun sendf(who: CommandSender, format: String, vararg objects: Any?) {
-		who.sendMessage(colorize(String.format(format, *objects)))
-	}
-
-	fun send(who: CommandSender, vararg what: String?) {
-		for (s in what) {
-			who.sendMessage(colorize(s))
-		}
-	}
-
-	fun send(who: CommandSender, what: Collection<String?>) {
-		for (s in what) {
-			who.sendMessage(colorize(s))
-		}
-	}
-
-	fun send(what: String, vararg who: CommandSender) {
-		for (sender in who) {
-			send(sender, what)
-		}
-	}
-
-	fun send(what: Collection<String?>, vararg who: CommandSender) {
-		for (sender in who) {
-			send(sender, what)
-		}
-	}
-
-	fun send(what: String, who: Collection<CommandSender>) {
-		for (sender in who) {
-			send(sender, what)
-		}
-	}
-
-	fun sendf(who: Collection<CommandSender>, format: String, vararg objects: Any?) {
-		for (sender in who) {
-			sendf(sender, String.format(format, *objects))
-		}
-	}
-
-	fun send(what: Collection<String?>, who: Collection<CommandSender>) {
-		for (sender in who) {
-			send(sender, what)
-		}
-	}
+	fun send(what: String, vararg who: CommandSender) = who.forEach { to -> send(to, what) }
+	fun send(what: String, who: Collection<CommandSender>) = who.forEach { to -> send(to, what) }
+	fun send(what: Collection<String?>, vararg who: CommandSender) = who.forEach { to -> send(to, what) }
+	fun send(what: Collection<String?>, who: Collection<CommandSender>) = who.forEach { to -> send(what, to) }
+	fun send(who: CommandSender, vararg what: String?) = what.forEach { who.sendMessage(colorize(it)) }
+	fun send(who: CommandSender, what: Collection<String?>) = what.forEach { who.sendMessage(colorize(it)) }
+	fun sendf(who: CommandSender, format: String, vararg objects: Any?) = who.sendMessage(colorize(String.format(format, *objects)))
+	fun sendf(who: Collection<CommandSender>, format: String, vararg objects: Any?) = who.forEach { to -> sendf(to, String.format(format, *objects)) }
 
 	fun broadcast(vararg announcement: String?) {
 		for (s in announcement) {
@@ -68,9 +33,7 @@ object Chat {
 		}
 	}
 
-	fun broadcastf(format: String, vararg objects: Any?) {
-		broadcast(String.format(format, *objects))
-	}
+	fun broadcastf(format: String, vararg objects: Any?) = broadcast(String.format(format, *objects))
 
 	fun broadcast(announcement: Collection<String?>) {
 		for (s in announcement) {
@@ -81,37 +44,16 @@ object Chat {
 		}
 	}
 
-	fun colorize(string: String?): String {
-		return ChatColor.translateAlternateColorCodes('&', getString(string))
-	}
+	fun colorize(string: String?): String = ChatColor.translateAlternateColorCodes('&', string ?: "")
+	fun colorize(stream: Stream<String>): List<String> = stream.map(::colorize).collect(Collectors.toList())
+	fun colorize(strings: Collection<String>): List<String> = colorize(strings.stream())
+	fun colorize(vararg strings: String): Array<String> = colorize(Arrays.stream(strings)).toTypedArray()
 
-	fun colorize(vararg strings: String): Array<String?> {
-		TODO()
-//		return Arrays.stream(strings).map(Function<String, String?> { obj: String -> obj.colorize() }).collect(Collectors.toList()).toTypedArray()
-	}
+	fun strip(string: String?): String = string?.replace(Regex("([&${ChatColor.COLOR_CHAR}])([0-9a-fk-or])"), "") ?: ""
+	fun strip(stream: Stream<String>): List<String> = stream.map(::strip).collect(Collectors.toList())
+	fun strip(strings: Collection<String>): List<String> = strip(strings.stream())
+	fun strip(vararg strings: String): Array<String> = strip(Arrays.stream(strings)).toTypedArray()
 
-	fun colorize(strings: Collection<String>): List<String> {
-		TODO()
-//		return strings.stream().map(obj: String -> obj.colorize() ).collect(Collectors.toList())
-	}
-
-	fun stripColors(string: String?): String {
-		return getString(string).replace(Regex("([&${ChatColor.COLOR_CHAR}])([0-9a-fk-or])"), "")
-	}
-
-	fun stripColors(vararg strings: String): Array<String?> {
-		TODO()
-//		return Arrays.stream(strings).map(Function<String, String?> { obj: String -> obj.stripColors() }).collect(Collectors.toList()).toTypedArray()
-	}
-
-	/**
-	 * Prints a debug message.
-	 * Will only trigger if [Chat.isDebugMode].
-	 *
-	 *
-	 * Format: `"[00:00:00 INFO]: [DEBUG] [PREFIX] message"`
-	 * If prefix is null or empty: `"[00:00:00 INFO]: [DEBUG] [|] message"`
-	 */
 	fun debug(prefix: String, vararg messages: String?) {
 		val parsed = getString(prefix)
 		if (debugMode) {
@@ -126,29 +68,16 @@ object Chat {
 		}
 	}
 
-	/**
-	 * Prints a debug message.
-	 * Will only trigger if [Chat.isDebugMode].
-	 *
-	 *
-	 * Format: `"[00:00:00 INFO]: [DEBUG] [PREFIX] message"`
-	 * If prefix is null or empty: `"[00:00:00 INFO]: [DEBUG] [|] message"`
-	 */
 	fun debug(prefix: String, vararg objects: Any?) {
 		if (debugMode) {
 			for (message in Common.convert(
 					listOf(objects)
 										  ) { o: Any? -> if (o != null && o.javaClass.isArray) Arrays.toString(o as Array<Any?>?) else o.toString() }) {
 				val text = String.format("[DEBUG] [%s] %s", if (prefix.isEmpty()) "|" else prefix, message)
-				if (PluginBase.log != null) {
-					PluginBase.log.info(text)
-				} else {
-					println(StringBuilder(text).insert(7, ":"))
-				}
+				PluginBase.log.info(text)
 			}
 		}
 	}
-
 
 	fun debugf(prefix: String, format: String, vararg objects: Any?) {
 		if (debugMode) {

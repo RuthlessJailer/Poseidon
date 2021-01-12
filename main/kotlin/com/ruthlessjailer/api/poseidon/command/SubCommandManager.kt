@@ -117,9 +117,7 @@ object SubCommandManager {
 					}
 				}
 			}
-
-			println(format[v])
-
+			
 			if (EnumParser.GENERIC.isFormatValid(format[v])) {
 				val enumType = method.parameterTypes[i + 2]//+2 for sender and args
 

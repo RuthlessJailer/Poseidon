@@ -14,7 +14,7 @@ import java.util.*
 
 abstract class CommandBase : Command {
 
-	constructor(label: String) : this(label.split("\\|")[0], parseAliases(label))
+	constructor(label: String) : this(label.split("|")[0], parseAliases(label))
 
 	private constructor(label: String, aliases: List<String>) : super(label, "description", "", aliases) {
 		Checks.verify(
@@ -41,7 +41,7 @@ abstract class CommandBase : Command {
 
 		@JvmStatic
 		private fun parseAliases(string: String): List<String> {
-			val aliases: Array<String> = string.split("\\|").toTypedArray()
+			val aliases: Array<String> = string.split("|").toTypedArray()
 			return if (aliases.size > 1) listOf(*Common.copyToEnd(aliases, 1)) else ArrayList()
 		}
 	}
@@ -163,10 +163,10 @@ abstract class CommandBase : Command {
 	 * @param startIndex the starting index, inclusive
 	 * @param args       the [String][] to parse
 	 *
-	 * @return the [joined][joinToString] [String], [copied][Common.copyFromStart] from the `startIndex`
+	 * @return the [joined][joinToString] [String], [copied][Common.copyToEnd] from the `startIndex`
 	 */
 	protected fun joinArgs(startIndex: Int, args: Array<String>): String {
-		return Common.copyFromStart(args, startIndex).joinToString(" ")
+		return Common.copyToEnd(args, startIndex).joinToString(" ")
 	}
 
 	protected fun send(sender: CommandSender, vararg messages: String) {

@@ -150,7 +150,7 @@ enum class MinecraftVersion(val id: Int, val version: String, val type: VersionT
 	}
 
 	class UnsupportedServerVersionException @JvmOverloads constructor(message: String = "", cause: Throwable? = null) :
-			RuntimeException("Unsupported server version (" + CURRENT_VERSION!!.xname + ") encountered. " + message, cause) {
+			RuntimeException("Unsupported server version (" + CURRENT_VERSION.xname + ") encountered. " + message, cause) {
 		constructor(cause: Throwable?) : this("", cause) {}
 
 		companion object {

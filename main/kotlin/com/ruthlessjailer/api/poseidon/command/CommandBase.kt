@@ -9,6 +9,7 @@ import com.ruthlessjailer.api.theseus.ReflectUtil
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.command.*
+import org.bukkit.entity.Player
 import org.bukkit.permissions.Permissible
 import java.util.*
 
@@ -32,7 +33,7 @@ abstract class CommandBase : Command {
 		const val DEFAULT_SUB_COMMAND_PERMISSION_SYNTAX = "\${permission}.\${sub.command}"
 		const val DEFAULT_PLAYER_FALSE_MESSAGE = "&cThis command must be executed by a player!"
 
-		var starPermissionSyntax = PluginBase.instance?.name?.let {
+		var starPermissionSyntax = PluginBase.instance.name.let {
 			DEFAULT_PERMISSION_SYNTAX
 					.replace("\${plugin.name}", it)
 					.replace("\${command.label}", "*")
@@ -86,6 +87,9 @@ abstract class CommandBase : Command {
 		protected set
 
 	var autoCheckPermissionForSubCommands = true
+		protected set
+
+	var playersOnlyFalseMessage = "&cYou must be a player to run this command."
 		protected set
 
 	var autoGenerateHelpMenu = true
@@ -204,6 +208,20 @@ abstract class CommandBase : Command {
 			 permissible.hasPermission(starPermissionSyntax) ||
 			 permissible.hasPermission(customPermissionSyntax) ||
 			 (permission != null && permissible.hasPermission(permission))
+	}
+
+	/**
+	 * Gets the player or sends the provided false message to the console.
+	 *
+	 * @return the sender casted to a player
+	 */
+	fun getPlayer(sender: CommandSender, falseMessage: String = playersOnlyFalseMessage): Player {
+		if (sender !is Player) {
+			send(sender, falseMessage)
+			throw CommandException()
+		}
+
+		return sender
 	}
 
 }

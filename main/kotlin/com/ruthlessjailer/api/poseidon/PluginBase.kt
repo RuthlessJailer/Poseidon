@@ -19,9 +19,10 @@ abstract class PluginBase : JavaPlugin(), Listener {
 		@Volatile
 		@JvmStatic
 		lateinit var instance: PluginBase
+			private set
 
 		@Volatile
-		lateinit var log: Logger
+		var log: Logger = Bukkit.getLogger()
 			private set
 
 		@Volatile
@@ -55,7 +56,7 @@ abstract class PluginBase : JavaPlugin(), Listener {
 			}
 		}
 
-		fun getCurrentName(): String = instance.name
+		fun getCurrentName(): String = if (::instance.isInitialized) instance.name else "No instance."
 
 		fun isMainThread(): Boolean = thread == Thread.currentThread()
 
@@ -66,7 +67,7 @@ abstract class PluginBase : JavaPlugin(), Listener {
 					"&c------------------- The plugin has encountered an error. --------------------",
 					"&cPlease send the latest log &8(located in /logs/latest.log) &cto the developer.",
 					"&cHere is some information about the server: ",
-					"&c \tVersion: &b" + instance.description.name + " v" + instance.description.version,
+					"&c \tVersion: &b" + getCurrentName() + " v" + if (::instance.isInitialized) instance.description.version else "0.0.0",
 					"&c \tSpigot: &1" + Bukkit.getServer().version + "&c",
 					"&c \tBukkit: &5" + Bukkit.getServer().bukkitVersion,
 					"&c \tCraftBukkit: &a" + MinecraftVersion.SERVER_VERSION,
@@ -74,19 +75,29 @@ abstract class PluginBase : JavaPlugin(), Listener {
 
 			log("&c-----------------------------------------------------------------------------")
 
-			when (exception) {
-				is SubCommandException             -> log("&cYou have failed to properly use the sub-command api. Please refer to the documentation/errors and check your methods.")
-				is ReflectUtil.ReflectionException -> log("&cReflection error; your server version is either too old or not yet supported.")
-				is ClassNotFoundException          -> log("&4Shading or dependency error. Make sure you have all the plugins needed installed.")
+
+			val error =
+					when (exception) {
+						is SubCommandException             -> "&cYou have failed to properly use the sub-command api. Please refer to the documentation/errors and check your methods."
+						is ReflectUtil.ReflectionException -> "&cReflection error; your server version is either too old or not yet supported."
+						is ClassNotFoundException          -> "&4Shading or dependency error. Make sure you have all the plugins needed installed."
+						else                               -> "getrekt"
+					}
+
+
+			if (error != "getrekt") {
+				log(error)
+				log("&c-----------------------------------------------------------------------------")
 			}
 
-			log("&c-----------------------------------------------------------------------------")
 			exception.printStackTrace()
 			log("&c-----------------------------------------------------------------------------")
 
 			if (disable) {
 				log("&4Fatal error: disabling...")
-				instance.isEnabled = false
+				if (::instance.isInitialized) {
+					instance.isEnabled = false
+				}
 				log("&c-----------------------------------------------------------------------------")
 			}
 

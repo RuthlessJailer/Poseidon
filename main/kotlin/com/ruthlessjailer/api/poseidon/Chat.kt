@@ -53,6 +53,11 @@ object Chat {
 	fun strip(stream: Stream<String>): List<String> = stream.map(::strip).collect(Collectors.toList())
 	fun strip(strings: Collection<String>): List<String> = strip(strings.stream())
 	fun strip(vararg strings: String): Array<String> = strip(Arrays.stream(strings)).toTypedArray()
+	
+	fun bungeeColorize(string: String?): String = net.md_5.bungee.api.ChatColor.translateAlternateColorCodes('&', string ?: "")
+	fun bungeeColorize(stream: Stream<String>): List<String> = stream.map(::colorize).collect(Collectors.toList())
+	fun bungeeColorize(strings: Collection<String>): List<String> = colorize(strings.stream())
+	fun bungeeColorize(vararg strings: String): Array<String> = colorize(Arrays.stream(strings)).toTypedArray()
 
 	fun debug(prefix: String, vararg messages: String?) {
 		val parsed = getString(prefix)
@@ -93,7 +98,6 @@ object Chat {
 	fun severe(vararg messages: String) = messages.forEach { PluginBase.log.severe(it) }
 	fun severef(format: String, vararg objects: Any?) = PluginBase.log.severe(String.format(format, *objects))
 
-
 	/*private static String consoleColorize(final String string) {
 		return ConsoleColor.translateAlternateColorCodes('&', getString(string));
 	}
@@ -111,14 +115,6 @@ object Chat {
 		if (strings == null) { return new String[]{}; }
 		return Arrays.stream(strings).map(Chat::consoleColorize).collect(Collectors.toList()).toArray(new String[strings.length]);
 	}*/
-	fun bungeeColorize(string: String?): String {
-		return net.md_5.bungee.api.ChatColor.translateAlternateColorCodes('&', getString(string))
-	}
-
-	fun bungeeColorize(vararg strings: String): Array<String?> {
-		TODO()
-//		return Arrays.stream(strings).map(Function<String, String?> { obj: String -> obj.bungeeColorize() }).collect(Collectors.toList()).toTypedArray()
-	}
 
 	/*@AllArgsConstructor
 	public enum ConsoleColor {//TODO: add JANSI compatibility

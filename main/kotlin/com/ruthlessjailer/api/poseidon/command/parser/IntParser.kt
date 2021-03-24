@@ -3,7 +3,7 @@ package com.ruthlessjailer.api.poseidon.command.parser
 /**
  * @author RuthlessJailer
  */
-class IntParser : ArgumentParser<Int>(type = Int::class.java, format = "int") {
+class IntParser : ArgumentParser<Int>(Regex("%int"), Int::class.java) {
 
 	override fun isValid(argument: String): Boolean = try {
 		argument.toInt()

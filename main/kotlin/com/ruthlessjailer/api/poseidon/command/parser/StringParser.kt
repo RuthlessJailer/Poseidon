@@ -3,7 +3,7 @@ package com.ruthlessjailer.api.poseidon.command.parser
 /**
  * @author RuthlessJailer
  */
-class StringParser : ArgumentParser<String>(type = String::class.java, format = "str") {
+class StringParser : ArgumentParser<String>(Regex("%str"), String::class.java) {
 
 	override fun isValid(argument: String): Boolean = true
 

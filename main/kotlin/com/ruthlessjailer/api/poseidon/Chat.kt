@@ -14,15 +14,23 @@ import java.util.stream.Stream
 object Chat {
 
 	var debugMode = false
+	var broadcastPrefix = true
+	var prefix: String = ""
+		//sent before messages to player
+		set(value) {
+			field = colorize(value)
+		}
 
 	fun send(what: String, vararg who: CommandSender) = who.forEach { to -> send(to, what) }
 	fun send(what: String, who: Collection<CommandSender>) = who.forEach { to -> send(to, what) }
 	fun send(what: Collection<String?>, vararg who: CommandSender) = who.forEach { to -> send(to, what) }
 	fun send(what: Collection<String?>, who: Collection<CommandSender>) = who.forEach { to -> send(what, to) }
-	fun send(who: CommandSender, vararg what: String?) = what.forEach { who.sendMessage(colorize(it)) }
-	fun send(who: CommandSender, what: Collection<String?>) = what.forEach { who.sendMessage(colorize(it)) }
-	fun sendf(who: CommandSender, format: String, vararg objects: Any?) = who.sendMessage(colorize(String.format(format, *objects)))
+	fun send(who: CommandSender, vararg what: String?) = what.forEach { who.sendMessage("${prefix}${colorize(it)}") }
+	fun send(who: CommandSender, what: Collection<String?>) = what.forEach { who.sendMessage("${prefix}${colorize(it)}") }
+	fun sendf(who: CommandSender, format: String, vararg objects: Any?) = who.sendMessage(colorize(String.format("${prefix}$format", *objects)))
 	fun sendf(who: Collection<CommandSender>, format: String, vararg objects: Any?) = who.forEach { to -> sendf(to, String.format(format, *objects)) }
+
+	fun CommandSender.send(what: String) = send(this, what)
 
 	fun broadcast(vararg announcement: String?) {
 		for (s in announcement) {
@@ -38,26 +46,34 @@ object Chat {
 	fun broadcast(announcement: Collection<String?>) {
 		for (s in announcement) {
 			for (player in Bukkit.getOnlinePlayers()) {
-				send(player, announcement)
+				if (broadcastPrefix) {
+					send(player, s)
+				} else {
+					player.sendMessage(colorize(s))
+				}
 			}
-			send(Bukkit.getConsoleSender(), s)
+			if (broadcastPrefix) {
+				send(Bukkit.getConsoleSender(), s)
+			} else {
+				Bukkit.getConsoleSender().sendMessage(colorize(s))
+			}
 		}
 	}
 
 	fun colorize(string: String?): String = ChatColor.translateAlternateColorCodes('&', string ?: "")
-	fun colorize(stream: Stream<String>): List<String> = stream.map(::colorize).collect(Collectors.toList())
-	fun colorize(strings: Collection<String>): List<String> = colorize(strings.stream())
-	fun colorize(vararg strings: String): Array<String> = colorize(Arrays.stream(strings)).toTypedArray()
+	fun colorize(stream: Stream<String?>): List<String?> = stream.map(::colorize).collect(Collectors.toList())
+	fun colorize(strings: Collection<String?>): List<String?> = colorize(strings.stream())
+	fun colorize(strings: Array<String?>): Array<String?> = colorize(Arrays.stream(strings)).toTypedArray()
 
 	fun strip(string: String?): String = string?.replace(Regex("([&${ChatColor.COLOR_CHAR}])([0-9a-fk-or])"), "") ?: ""
-	fun strip(stream: Stream<String>): List<String> = stream.map(::strip).collect(Collectors.toList())
-	fun strip(strings: Collection<String>): List<String> = strip(strings.stream())
-	fun strip(vararg strings: String): Array<String> = strip(Arrays.stream(strings)).toTypedArray()
-	
+	fun strip(stream: Stream<String?>): List<String?> = stream.map(::strip).collect(Collectors.toList())
+	fun strip(strings: Collection<String?>): List<String?> = strip(strings.stream())
+	fun strip(strings: Array<String?>): Array<String?> = strip(Arrays.stream(strings)).toTypedArray()
+
 	fun bungeeColorize(string: String?): String = net.md_5.bungee.api.ChatColor.translateAlternateColorCodes('&', string ?: "")
-	fun bungeeColorize(stream: Stream<String>): List<String> = stream.map(::colorize).collect(Collectors.toList())
-	fun bungeeColorize(strings: Collection<String>): List<String> = colorize(strings.stream())
-	fun bungeeColorize(vararg strings: String): Array<String> = colorize(Arrays.stream(strings)).toTypedArray()
+	fun bungeeColorize(stream: Stream<String?>): List<String?> = stream.map(::bungeeColorize).collect(Collectors.toList())
+	fun bungeeColorize(strings: Collection<String?>): List<String?> = colorize(strings.stream())
+	fun bungeeColorize(strings: Array<String?>): Array<String?> = colorize(Arrays.stream(strings)).toTypedArray()
 
 	fun debug(prefix: String, vararg messages: String?) {
 		val parsed = getString(prefix)

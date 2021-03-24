@@ -7,7 +7,7 @@ import org.bukkit.entity.Player
 /**
  * @author RuthlessJailer
  */
-class PlayerParser : ArgumentParser<Player>(type = Player::class.java, format = "player") {
+class PlayerParser : ArgumentParser<Player>(Regex("%pl"), Player::class.java) {
 	override fun isValid(argument: String): Boolean = Common.getPlayerNames().contains(argument)
 
 	override fun parse(argument: String): Player? = Bukkit.getPlayer(argument)

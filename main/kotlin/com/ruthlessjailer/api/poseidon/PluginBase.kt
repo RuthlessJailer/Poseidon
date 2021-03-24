@@ -75,7 +75,6 @@ abstract class PluginBase : JavaPlugin(), Listener {
 
 			log("&c-----------------------------------------------------------------------------")
 
-
 			val error =
 					when (exception) {
 						is SubCommandException             -> "&cYou have failed to properly use the sub-command api. Please refer to the documentation/errors and check your methods."
@@ -125,8 +124,8 @@ abstract class PluginBase : JavaPlugin(), Listener {
 		StringParser().register()
 		OfflinePlayerParser().register()
 		PlayerParser().register()
+//		BooleanParser().register()
 		EnumParser.GENERIC.register()
-
 
 		try {
 			onStart()
@@ -203,6 +202,13 @@ abstract class PluginBase : JavaPlugin(), Listener {
 	 * Called in [onDisable].
 	 */
 	open fun onStop() {}
+
+	/**
+	 * Called when the `/plugin reload` command is called.
+	 */
+	open fun reloadConfigs() {
+		reloadConfig()
+	}
 
 	private fun debug(vararg string: String) {
 		Chat.debug("Plugin", string)

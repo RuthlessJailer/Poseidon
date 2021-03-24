@@ -65,10 +65,11 @@ abstract class CommandBase : Command {
 
 	var customPermissionMessage: String = DEFAULT_PERMISSION_MESSAGE //bukkit's name permissionMessage that's why it's called customPermissionMessage
 			.replace("\${permission}", customPermissionSyntax)
+			.replace("{permission}", customPermissionSyntax)
 		protected set(value) {
-			field = value.replace("\${permission}", customPermissionSyntax)
+			field = value.replace("\${permission}", customPermissionSyntax).replace("{permission}", customPermissionSyntax)
 		}
-		get() = TODO() //Chat.colorize(field)
+		get() = Chat.colorize(field)
 
 //	var helpMenuFormatOverride: HelpMenuFormat = HelpMenuFormat.DEFAULT_FORMAT
 //		protected set

@@ -7,7 +7,7 @@ import org.bukkit.OfflinePlayer
 /**
  * @author RuthlessJailer
  */
-class OfflinePlayerParser : ArgumentParser<OfflinePlayer>(type = OfflinePlayer::class.java, format = "offline") {
+class OfflinePlayerParser : ArgumentParser<OfflinePlayer>(Regex("%ofp"), OfflinePlayer::class.java) {
 	override fun isValid(argument: String): Boolean = true
 
 	override fun parse(argument: String): OfflinePlayer = Bukkit.getOfflinePlayer(argument)

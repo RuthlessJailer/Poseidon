@@ -7,7 +7,7 @@ import java.util.*
 /**
  * @author RuthlessJailer
  */
-open class EnumParser<E : Enum<E>>(type: Class<E>) : ArgumentParser<E>(requiresClass = true, format = Regex("enum").toString(), type = type) {
+open class EnumParser<E : Enum<E>>(type: Class<E>) : ArgumentParser<E>(Regex("%enum"), type, true) {
 
 	companion object {
 		internal val ENUM_TYPE = ENUM::class.java

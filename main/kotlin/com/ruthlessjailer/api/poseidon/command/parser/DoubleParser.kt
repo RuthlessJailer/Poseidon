@@ -3,7 +3,7 @@ package com.ruthlessjailer.api.poseidon.command.parser
 /**
  * @author RuthlessJailer
  */
-class DoubleParser : ArgumentParser<Double>(type = Double::class.java, format = "double") {
+class DoubleParser : ArgumentParser<Double>(Regex("%double"), Double::class.java) {
 
 	override fun isValid(argument: String): Boolean = try {
 		argument.toDouble()

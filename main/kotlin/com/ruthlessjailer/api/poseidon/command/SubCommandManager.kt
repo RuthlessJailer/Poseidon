@@ -109,19 +109,17 @@ object SubCommandManager {
 		val arguments = Array<Argument<*>>(counter) { i -> if (EnumParser.GENERIC.isFormatValid(format[i])) Argument.GENERIC else Argument.EMPTY }
 		val variables = Array<Class<*>>(variableCounter) { i ->
 
-			format@ for (arg in format) {
+			format@ for ((j, arg) in format.withIndex()) {
 				for (entry in parsers.entries) {
-					if (!entry.value.isFormatValid(format[v])) {
-						v++
+					if (j > v && entry.value.isFormatValid(arg)) {
+						v = j
 						break@format
 					}
 				}
 			}
-			
+
 			if (EnumParser.GENERIC.isFormatValid(format[v])) {
 				val enumType = method.parameterTypes[i + 2]//+2 for sender and args
-
-				println(enumType)
 
 				Checks.verify(
 						enumType.isEnum,
@@ -189,7 +187,8 @@ object SubCommandManager {
 		}
 
 		if (command.autoGenerateHelpMenu && args.isNotEmpty() && args[0].equals("help", ignoreCase = true)) {//automatic help command
-			TODO()
+//			TODO()
+			return
 		}
 
 		if (subCommands[command] == null) {
@@ -224,7 +223,7 @@ object SubCommandManager {
 			Chat.debug("SubCommands", "Invoking method ${getMethodPath(wrapper.method)} for args '${args.joinToString(" ")}'.")
 
 			try {
-				ReflectUtil.invokeMethod<Any>(wrapper.method, command, *parameters)
+				ReflectUtil.invokeMethod<Any>(wrapper.method, command as CommandBase, *parameters)
 			} catch (e: ReflectUtil.ReflectionException) {
 				if (e.cause?.cause is CommandException) break
 				e.cause?.cause?.printStackTrace()

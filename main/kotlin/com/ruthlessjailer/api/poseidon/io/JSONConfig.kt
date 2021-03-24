@@ -1,5 +1,7 @@
 package com.ruthlessjailer.api.poseidon.io
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.ruthlessjailer.api.poseidon.Chat
 import com.ruthlessjailer.api.poseidon.PluginBase
 import com.ruthlessjailer.api.theseus.ReflectUtil
@@ -10,7 +12,8 @@ import java.io.InputStream
 /**
  * @author RuthlessJailer
  */
-abstract class JSONConfig(path: String, content: String = "") : JSONFile(PluginBase.instance.dataFolder.path + File.separator + removeStartingSeparatorChar(path), content = content) {
+abstract class JSONConfig(path: String, content: String = "", GSON: Gson = GsonBuilder().create()) :
+		JSONFile(PluginBase.instance.dataFolder.path + File.separator + removeStartingSeparatorChar(path), content = content, GSON = GSON) {
 
 	init {
 		Chat.debug("Config", "Loading config class ${ReflectUtil.getPath(javaClass)}.")
